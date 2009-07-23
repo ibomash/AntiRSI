@@ -22,25 +22,48 @@
 
 @implementation AntiRSIView
 
-- (id)initWithFrame:(NSRect)frameRect
-{
-	if ((self = [super initWithFrame:frameRect]) != nil) {
-		// Add initialization code here
-	}
-	return self;
-}
-
 - (void)drawRect:(NSRect)rect
 {
-	[[NSColor clearColor] set];
-    NSRectFill([self frame]);
-	[_image compositeToPoint:NSZeroPoint operation:NSCompositeSourceOver];
-	
+    NSColor *bgColor = [NSColor colorWithCalibratedWhite:0.0 alpha:0.90];
+    NSRect bgRect = [self frame];
+    int minX = NSMinX(bgRect);
+    int midX = NSMidX(bgRect);
+    int maxX = NSMaxX(bgRect);
+    int minY = NSMinY(bgRect);
+    int midY = NSMidY(bgRect);
+    int maxY = NSMaxY(bgRect);
+    float radius = 25.0; // correct value to duplicate Panther's App Switcher
+    NSBezierPath *bgPath = [NSBezierPath bezierPath];
+    
+    /* XXX from Casey Marshall's version; does it help with the hole-in-window problem? */
+    [[NSColor clearColor] set];
+    NSRectFill(bgRect);
+    /* XXX end */
+    
+    // Bottom edge and bottom-right curve
+    [bgPath moveToPoint:NSMakePoint(midX, minY)];
+    [bgPath appendBezierPathWithArcFromPoint:NSMakePoint(maxX, minY) 
+                                     toPoint:NSMakePoint(maxX, midY) 
+                                      radius:radius];
+    
+    // Right edge and top-right curve
+    [bgPath appendBezierPathWithArcFromPoint:NSMakePoint(maxX, maxY) 
+                                     toPoint:NSMakePoint(midX, maxY) 
+                                      radius:radius];
+    
+    // Top edge and top-left curve
+    [bgPath appendBezierPathWithArcFromPoint:NSMakePoint(minX, maxY) 
+                                     toPoint:NSMakePoint(minX, midY) 
+                                      radius:radius];
+    
+    // Left edge and bottom-left curve
+    [bgPath appendBezierPathWithArcFromPoint:bgRect.origin 
+                                     toPoint:NSMakePoint(midX, minY) 
+                                      radius:radius];
+    [bgPath closePath];
+    
+    [bgColor set];
+    [bgPath fill];
 }
 
-- (void)setImage:(NSImage *)image;
-{
-	_image = image;
-	[self setNeedsDisplay:YES];
-}
 @end

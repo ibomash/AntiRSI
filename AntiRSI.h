@@ -20,76 +20,88 @@
 
 #import <Cocoa/Cocoa.h>
 #import "AntiRSIView.h"
+#import "CTBadge.h"
 
-#define sLatestVersionURL @"http://tech.inhelsinki.nl/antirsi/antirsi_version.txt"
-#define sURL @"http://tech.inhelsinki.nl/antirsi/"
-#define sVersion @"1.4"
+#define sLatestVersionURL @"http://web.sabi.net/nriley/software/AntiRSI-version.txt"
+#define sURL @"http://web.sabi.net/nriley/software/#antirsi"
+#define sVersion @"1.4njr4"
 
 typedef enum _AntiRSIState {
-	s_normal = 0,
-	s_taking_micro_pause,
-	s_taking_work_break,
+    s_normal = 0,
+    s_taking_micro_pause,
+    s_taking_work_break,
 } AntiRSIState;
 
 @interface AntiRSI : NSObject
 {
-	// views to display current status in
-	IBOutlet AntiRSIView *view;
-	IBOutlet NSProgressIndicator *progress;
-	IBOutlet NSButton *postpone;
-	IBOutlet NSTextField *time;
-	IBOutlet NSTextField *next_break;
-	IBOutlet NSTextField *version;
+    // views to display current status in
+    IBOutlet AntiRSIView *view;
+    IBOutlet NSLevelIndicator *progress;
+    IBOutlet NSButton *postpone;
+    IBOutlet NSTextField *time;
+    IBOutlet NSTextField *next_break;
+    IBOutlet NSTextField *session_time;
+    IBOutlet NSTextField *status;
+    IBOutlet NSTextField *version; // XXX unused?
+    IBOutlet NSDatePicker *reset_session_time;
+    
+    // dock menu
+    IBOutlet NSMenu *dock_menu;
+    IBOutlet NSMenuItem *session_time_item;
+    
+    // dock icon image
+    NSImage* dock_image;
+    NSImage* original_dock_image;
+    CTBadge* dock_badge;
 	
-	// images
-	NSImage* micro_pause_image;
-	NSImage* work_break_image;
-	
-	// dock icon image
-	NSImage* dock_image;
-	NSImage* original_dock_image;
-	
-	// window to display the views in
-	NSWindow *main_window;
-	
-	// timer that ticks every second to update
-	NSTimer *mtimer;
-	
-	// various timers
-	double micro_pause_t;
-	double work_break_t;
-	double micro_pause_taking_t;
-	double work_break_taking_t;
-	double work_break_taking_cached_t;
-	double work_break_taking_cached_date;
-	double date;
+    // window to display the views in
+    NSWindow *main_window;
+    
+    // timer that ticks every second to update
+    NSTimer *mtimer;
+    
+    // various timers
+    double micro_pause_t;
+    double work_break_t;
+    double micro_pause_taking_t;
+    double work_break_taking_t;
+    double work_break_taking_cached_t;
+    double work_break_taking_cached_date;
+    double session_t;
+    double date;
+    double reset_session_date;
 		
-	// various timing lengths
-	int micro_pause_period;
-	int micro_pause_duration;
-	int work_break_period;
-	int work_break_duration;
+    // various timing lengths
+    int micro_pause_period;
+    int micro_pause_duration;
+    int work_break_period;
+    int work_break_duration;
+    
+    double sample_interval;
+    
+    // various other options
+    bool lock_focus;
+    bool draw_dock_image;
+    bool draw_dock_badge;
+    bool draw_dock_image_q;
+    bool reset_session_timer_daily;
+    bool reset_session_timer_after;
+    NSCalendarDate *reset_session_timer_time;
+    int reset_session_timer_after_hours;
 	
-	double sample_interval;
-	
-	// verious other options
-	bool lock_focus;
-	bool draw_dock_image;
-	bool draw_dock_image_q;
-	
-	// various colors
-	NSColor* taking;
-	NSColor* elapsed;
-	NSColor* background;
-	NSColor* darkbackground;
-	
-	// state we are in
-	AntiRSIState state;
-	
-	// history filter
-	double h0;
-	double h1;
-	double h2;
+    // various colors
+    NSColor* taking;
+    NSColor* elapsed;
+    NSColor* background;
+    NSColor* darkbackground;
+    
+    // state we are in
+    AntiRSIState state;
+    
+    // history filter
+    double h0;
+    double h1;
+    double h2;
 }
 
 //bindings
@@ -113,8 +125,17 @@ typedef enum _AntiRSIState {
 // workbreak now menu item
 - (IBAction)breakNow:(id)sender;
 
+// reset session time menu item
+- (IBAction)resetSession:(id)sender;
+
+// returns string of the form "Session: 12:34:56"
+- (NSString *)sessionTimeString;
+
 // one second ticks away ...
 - (void)tick:(NSTimer *)timer;
+
+// reset all timers
+- (void)resetTimers;
 
 // draw the dock icon
 - (void)drawDockImage;
@@ -128,13 +149,7 @@ typedef enum _AntiRSIState {
 // stop micro pause or work break
 - (void)endBreak;
 
-// time left string
-- (void)drawTimeLeft:(int)seconds;
-
-// time to next break string
-- (void)drawNextBreak:(int)seconds;
+// update window
+- (void)updateBreakWindowDuration:(double)duration progress:(double)progress_t nextBreak:(double)nextBreak;
 
 @end
-
-
-

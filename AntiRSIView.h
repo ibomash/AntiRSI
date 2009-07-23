@@ -22,9 +22,6 @@
 
 @interface AntiRSIView : NSView
 {
-	NSImage* _image;
 }
-
-- (void)setImage:(NSImage *)image;
 
 @end
